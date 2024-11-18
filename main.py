@@ -1,5 +1,6 @@
 import pygame 
 import sys
+import random
 
 pygame.init()
 
@@ -65,6 +66,18 @@ def move_player(dx, dy):
     if 0 <= new_x < ROWS and 0 <= new_y < COLS and maze[new_x][new_y] == 0:
         player_pos[0], player_pos[1] = new_x, new_y
 
+action_map = {
+    1: (-1, 0),
+    2: (1, 0),
+    3: (0, -1),
+    4: (0, 1)
+}
+
+def take_action():
+    action_x, action_y = action_map[random.randint(1,4)]
+
+    move_player(action_x, action_y)
+
 # Main game loop
 running = True
 while running:
@@ -73,6 +86,8 @@ while running:
     draw_player()
     draw_goal()
 
+    take_action()
+    """
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -85,6 +100,7 @@ while running:
                 move_player(0, -1)
             elif event.key == pygame.K_RIGHT:
                 move_player(0, 1)
+    """
 
     # Check for win condition
     if player_pos == goal_pos:
