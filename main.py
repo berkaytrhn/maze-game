@@ -2,6 +2,13 @@ import pygame
 import sys
 import random
 
+
+
+#TODO: use take_action for rl algo
+#TODO: create game class for game instance and management
+#TODO: create fields to share with rl algorithm, and should have running game behind
+
+
 pygame.init()
 
 
