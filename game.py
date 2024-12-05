@@ -1,52 +1,57 @@
 import pygame
-from typing import Optional
 from pygame import Surface
 import random
 import sys
+import matplotlib.pyplot as plt
+from typing import Dict, Tuple, Iterable
+import numpy as np
+from gymnasium import spaces
+import gymnasium as gym
+from PIL import Image, ImageDraw
 
-class MazeGame:
-    NAME: str = "Maze Game"
+
+class MazeGame(gym.Env):
+   
     
-    # Parameters
-    SCREEN_WIDTH: int = 600
-    SCREEN_HEIGHT: int = 600
-    CELL_SIZE: int = 40
-    
-    # Constants
-    WHITE: tuple = (255, 255, 255)
-    BLACK: tuple = (0, 0, 0)
-    GREEN: tuple = (0, 255, 0)
-    RED: tuple = (255, 0, 0)
-    
-    # Maze dimensions
-    ROWS: int = 0
-    COLS: int = 0
-    
-    
-    # Variables
-    screen: Surface = None
-    player_position:list  = None
-    goal_position: list = None
-    maze: list = None
-    
-    action_map: dict = {
-        1: (-1, 0),
-        2: (1, 0),
-        3: (0, -1),
-        4: (0, 1)
-    }
-    
-    
-    def __init__(self, name:str) -> None:
-        self.NAME=name
-        pygame.init()
-      
-      
-    def prepare_environment(self):
-        self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
-        pygame.display.set_caption(self.NAME)
+    def __init__(self, maze: np.ndarray, rewards: np.ndarray) -> None:
+        self.maze=maze
+        self.n_rows, self.n_cols = maze.shape
         
+        self.start_state = (1,1)
+        self.goal_state = (1, 7)
+        self.observation_space = spaces.Tuple((
+            spaces.Discrete(self.n_rows), 
+            spaces.Discrete(self.n_cols)
+        ))
+        self.rewards=rewards
+        self.action_space = spaces.Discrete(4)
+        self.state=self.start_state
+        
+    def step(self, action):
+        # Define actions: 0=up, 1=down, 2=left, 3=right
+        row, col = self.state
+        if action == 0 and row > 0 and self.maze[row-1, col] == 0:  # Up
+            row -= 1
+        elif action == 1 and row < self.n_rows-1 and self.maze[row+1, col] == 0:  # Down
+            row += 1
+        elif action == 2 and col > 0 and self.maze[row, col-1] == 0:  # Left
+            col -= 1
+        elif action == 3 and col < self.n_cols-1 and self.maze[row, col+1] == 0:  # Right
+            col += 1
+        
+        self.state = (row, col)
+        reward = self.rewards[row,col]  # Default step cost
+        done = False
+        if self.state == self.goal_state:
+            done = True
+
+        return self.state, reward, done, {}
     
+    
+    def reset(self):
+        self.state = self.start_state
+        return self.state 
+      
     def configure_maze(
         self, 
         maze:list=None, 
@@ -57,97 +62,42 @@ class MazeGame:
         self.maze=maze if maze else None
         self.player_position=player_pos if player_pos else None
         self.goal_position=goal_pos if goal_pos else None
-         
-        
-            
-        
+
+    def render(self, mode="human"):
+        if mode == "rgb_array":
+            return self._render_rgb_array()
+        elif mode == "human":
+            print(self._render_human())
     
-    def draw_maze(self) -> list:
-        for row in range(self.ROWS):
-            for col in range(self.COLS):
-                color = self.BLACK if self.maze[row][col] == 1 else self.WHITE
-                pygame.draw.rect(self.screen, color, (col * self.CELL_SIZE, row * self.CELL_SIZE, self.CELL_SIZE, self.CELL_SIZE))
-       
-        self.ROWS = len(self.maze)
-        self.COLS = len(self.maze[0])
-
-    # Draw the player
-    def draw_player(self):
-        pygame.draw.rect(
-            self.screen, 
-            self.GREEN, 
-            (
-                self.player_position[1] * self.CELL_SIZE, 
-                self.player_position[0] * self.CELL_SIZE, 
-                self.CELL_SIZE, 
-                self.CELL_SIZE
-            )
-        )
-
-    # Draw the goal
-    def draw_goal(self):
-        pygame.draw.rect(
-            self.screen, 
-            self.RED, 
-            (
-                self.goal_position[1] * self.CELL_SIZE, 
-                self.goal_position[0] * self.CELL_SIZE, 
-                self.CELL_SIZE, 
-                self.CELL_SIZE
-            )
-        )
-
-    def move_player(self, dx, dy):
-        new_x, new_y = self.player_position[0] + dx, self.player_position[1] + dy
-        # Check if new position is within bounds and not a wall
-        if 0 <= new_x < self.ROWS and 0 <= new_y < self.COLS and self.maze[new_x][new_y] == 0:
-            self.player_position[0], self.player_position[1] = new_x, new_y
-
-    def take_random_action(self):
-        action_x, action_y = self.action_map[random.randint(1,4)]
-
-        self.move_player(action_x, action_y)
-
+    def _render_rgb_array(self):
+        # Create an RGB image of the maze
+        cell_size = 50  # Size of each cell in pixels
+        img_size = (self.n_cols * cell_size, self.n_rows * cell_size)
+        img = Image.new("RGB", img_size, "white")
+        draw = ImageDraw.Draw(img)
         
+        # Draw walls
+        for r in range(self.n_rows):
+            for c in range(self.n_cols):
+                if self.maze[r, c] == 1:  # Wall
+                    top_left = (c * cell_size, r * cell_size)
+                    bottom_right = ((c + 1) * cell_size, (r + 1) * cell_size)
+                    draw.rectangle([top_left, bottom_right], fill="black")
+        
+        # Draw agent
+        agent_top_left = (self.state[1] * cell_size, self.state[0] * cell_size)
+        agent_bottom_right = ((self.state[1] + 1) * cell_size, 
+                              (self.state[0] + 1) * cell_size)
+        draw.rectangle([agent_top_left, agent_bottom_right], fill="blue")
+        
+        # Convert to NumPy array
+        return np.array(img)
+    
+    def _render_human(self):
+        # Simple text-based rendering for debugging
+        render_grid = self.maze.copy().astype(str)
+        r, c = self.agent_position
+        render_grid[r, c] = "A"
+        return "\n".join(" ".join(row) for row in render_grid)
     
     
-    
-    def game_loop(self):
-        # Main game loop
-        running = True
-        while running:
-            self.prepare_environment()
-            self.screen.fill(self.WHITE)
-            self.draw_maze()
-            self.draw_player()
-            self.draw_goal()
-
-            # self.take_random_action()
-            # Intentional Action
-            
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP:
-                        self.move_player(-1, 0)
-                    elif event.key == pygame.K_DOWN:
-                        self.move_player(1, 0)
-                    elif event.key == pygame.K_LEFT:
-                        self.move_player(0, -1)
-                    elif event.key == pygame.K_RIGHT:
-                        self.move_player(0, 1)
-            
-
-            # Check for win condition
-            if self.player_position == self.goal_position:
-                print("You reached the goal!")
-                running = False
-
-            # Clear the screen
-            pygame.display.flip()
-            pygame.time.Clock().tick(60)
-        pygame.quit()
-        sys.exit()
-        
-        pygame.quit()
