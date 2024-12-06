@@ -52,23 +52,6 @@ class MazeGame(gym.Env):
         self.state = self.start_state
         return self.state 
       
-    def configure_maze(
-        self, 
-        maze:list=None, 
-        player_pos:list=None, 
-        goal_pos:list=None
-    )  -> None:
-        
-        self.maze=maze if maze else None
-        self.player_position=player_pos if player_pos else None
-        self.goal_position=goal_pos if goal_pos else None
-
-    def render(self, mode="human"):
-        if mode == "rgb_array":
-            return self._render_rgb_array()
-        elif mode == "human":
-            print(self._render_human())
-    
     def _render_rgb_array(self):
         # Create an RGB image of the maze
         cell_size = 50  # Size of each cell in pixels

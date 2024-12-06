@@ -11,62 +11,79 @@ def save_video(frames, file_path):
         for frame in frames:
             writer.append_data(frame)
 
-def value_iteration(env, gamma=0.99, threshold=1e-4):
+def value_iteration(env, gamma=0.9, threshold=1e-4, max_iteration: int=1000):
     n_rows, n_cols = env.maze.shape
-    V = np.zeros((n_rows, n_cols))
-    policy = -1*np.ones((n_rows, n_cols), dtype=int)
+    V = np.zeros_like(env.maze)
+    policy = -1*np.ones_like(env.maze, dtype=int)
 
 
     # Initialize history to store state-action transitions
-    history = []    
-    frames = []
-    max_iterations = 100
     episode=1
     while True:
-        
-        if episode>=max_iterations:
+        if episode >= max_iteration:
             break
         delta = 0
-        with tqdm(total=n_rows*n_cols, desc="Training Progress...") as pbar:
-            for row in range(n_rows):
-                for col in range(n_cols):
-                    if env.maze[row, col] == 1:
-                        continue  # Skip walls
+        
+        if episode % 100 == 0:
+            pass
+            #print(F"Episode: '{episode}' delta: '{delta}', threshold: '{threshold}'")
+        for row in range(n_rows):
+            for col in range(n_cols):
+                # update current state
+                env.state = (row, col)
+                
+                # Skip if wall
+                if env.maze[env.state] == 1: # row, col
+                    continue 
+                
+                # current value
+                old_value = V[env.state] # row, col
+                
+                q_values = []
+                for action in range(env.action_space.n):
                     
-                    v = V[row, col]
-                    q_values = []
-                    # print(env.action_space.n)
-                    for action in range(env.action_space.n):
-                        env.state = (row, col)
-                        next_state, reward, done, _ = env.step(action)
-                        # print(f"row: {row}, col: {col}, action: {action}")
-                        # print(next_state, reward, done, _)
-                        next_row, next_col = next_state
-                        
-                        history.append(((row, col), action, next_state, reward))
-                        q_value = reward + gamma * V[next_row, next_col]
-                        q_values.append(q_value)
-                    # print(q_values)
-                    V[row, col] = max(q_values)
-                    print(q_values)
-                    policy[row, col] = np.argmax(q_values)
-                    delta = max(delta, abs(v - V[row, col]))
-                    
-                    _prev =datetime.now()
-                    frame = env.render(mode="rgb_array") 
-                    pbar.set_description(f"Episode: '{episode}' -> Render took '{(datetime.now()-_prev).total_seconds()}'secs")
-                    pbar.update(1)
-                    frames.append(frame)
+                    # environment step for agent
+                    next_state, reward, done, _ = env.step(action)
+                    # state -> (<row>, <column>)
+                    # value calculation with discount factor 
+                    q_value = reward + gamma * V[next_state]
 
+                    # add q values to list for all actions to choose max among them later
+                    q_values.append(q_value)
+                
+                # update value for prev state as max q value
+                V[env.state] = max(q_values)
+                
+                # update delta by comparing delta with temporal difference
+                delta = max(delta, abs(old_value - V[env.state]))
+                
+                _prev =datetime.now()
         if delta < threshold:
             break
         
-        
         episode+=1
     
-    
-    return V, policy, history
+    return V, policy
 
+def extract_policy(env: MazeGame, V: np.ndarray, P: np.ndarray, gamma=0.9, ):
+    frames = []
+    for row in range(env.maze.shape[0]):
+        for col in range(env.maze.shape[1]):
+            env.state = (row, col)
+            if env.state == env.goal:
+                continue
+            values = []
+            for action in range(env.action_space.n):
+                next_state, reward, _ = env.step(action)
+                value = reward + gamma * V[next_state]
+                values.append(value)
+            frames.append(env._render_rgb_array())
+            best_action = env.action_space[np.argmax(values)]
+            P[env.state] = best_action
+    save_video(frames, "test_video.mp4")
+            
+            
+        
 def main():
 
     maze = [
@@ -86,11 +103,20 @@ def main():
     ]
 
     game = MazeGame(np.array(maze), np.array(rewards))
-    V, policy, history = value_iteration(game)
+    max_iteration = 75_000
+    V, policy = value_iteration(game, max_iteration=max_iteration)
+    
+    # value iteration debug yapılacak, çözüldükten sonra policy run implement edilecek
+    print("Maze")
+    print(maze)
     print("Value Function:")
     print(V)
+    np.save("values.npy", V)
     print("Policy:")
     print(policy)
+    np.save("policy.npy", policy)
+    
+    extract_policy(game, V, policy)
     
 
 

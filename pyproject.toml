@@ -2,15 +2,13 @@
 requires = ["setuptools>=60", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[project]
+[tool.poetry]
 name = "maze_game"
 version = "0.0.1"
 description = "RL Implementation Playground on Maze Game"
 readme = "README.md"
-authors = [
-  { name = "berkaytrhn", email = "berkaytrhn@gmail.com" }
-]
-license = { text = "MIT" }
+authors = ["berkaytrhn berkaytrhn@gmail.com"]
+license = "MIT"
 keywords = ["reinforcement learning", "implementations", "game"]
 classifiers = [
   "Programming Language :: Python :: 3",
@@ -21,7 +19,7 @@ requires-python = ">=3.11.8"
 
 
 
-[project.urls]
+[tool.poetry.urls]
 "Source" = "https://github.com/berkaytrhn/maze-game"
 
 
@@ -32,7 +30,7 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["."]
 
-[project.dependencies]
+[tool.poetry.dependencies]
 asgiref="3.8.1"
 asttokens="3.0.0"
 cloudpickle="3.1.0"
@@ -72,6 +70,4 @@ traitlets="5.14.3"
 typing_extensions="4.12.2"
 tzdata="2024.2"
 wcwidth="0.2.13"
-
-
 
