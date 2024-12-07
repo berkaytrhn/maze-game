@@ -1,11 +1,11 @@
 
 from game import MazeGame
 import numpy as np
-import gymnasium as gym
 import imageio
 
 class ValueIteration:
-    # TODO: find a better way to integrate gym.Env for actions and obs space
+    # TODO: Find a better way to integrate gym.Env for actions and obs space
+    # TODO: Use custom topological sort or bfs from algorithms repo for dynamic reward calculation
     def __init__(
         self, 
         env: MazeGame,

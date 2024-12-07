@@ -2,4 +2,9 @@
 
 
 ## Value Iteration Based Solution Video
-[![solution](https://img.youtube.com/vi/EEC2kuumuaU/0.jpg)](https://www.youtube.com/watch?v=EEC2kuumuaU)
+
+<video src="sample_maze_video.mp4" controls ></video>
+
+[Youtube Link](https://www.youtube.com/watch?v=EEC2kuumuaU)
+
+
