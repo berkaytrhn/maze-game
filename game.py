@@ -1,9 +1,3 @@
-import pygame
-from pygame import Surface
-import random
-import sys
-import matplotlib.pyplot as plt
-from typing import Dict, Tuple, Iterable
 import numpy as np
 from gymnasium import spaces
 import gymnasium as gym
@@ -13,12 +7,18 @@ from PIL import Image, ImageDraw
 class MazeGame(gym.Env):
    
     
-    def __init__(self, maze: np.ndarray, rewards: np.ndarray) -> None:
+    def __init__(
+        self, 
+        maze: np.ndarray, 
+        rewards: np.ndarray,
+        initial_state: tuple,
+        goal_state: tuple
+    ) -> None:
         self.maze=maze
         self.n_rows, self.n_cols = maze.shape
         
-        self.start_state = (1,1)
-        self.goal_state = (1, 7)
+        self.start_state = initial_state # (2,1)
+        self.goal_state = goal_state # (self.n_rows-1, self.n_cols-1)
         self.observation_space = spaces.Tuple((
             spaces.Discrete(self.n_rows), 
             spaces.Discrete(self.n_cols)
@@ -39,13 +39,12 @@ class MazeGame(gym.Env):
         elif action == 3 and col < self.n_cols-1 and self.maze[row, col+1] == 0:  # Right
             col += 1
         
-        self.state = (row, col)
-        reward = self.rewards[row,col]  # Default step cost
-        done = False
-        if self.state == self.goal_state:
-            done = True
-
-        return self.state, reward, done, {}
+        next_state = (row, col)
+        
+        reward = self.rewards[next_state]  # Default step cost
+        done = next_state == self.goal_state
+        self.state=next_state
+        return next_state, reward, done, {}
     
     
     def reset(self):
