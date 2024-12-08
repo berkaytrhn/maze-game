@@ -3,8 +3,8 @@
 
 ## Value Iteration Based Solution Video
 
-<video src="sample_maze_video.mp4" controls ></video>
+### YT
 
-[Youtube Link](https://www.youtube.com/watch?v=EEC2kuumuaU)
+[Value Iteration Solution](https://www.youtube.com/watch?v=EEC2kuumuaU)
 
-
+[Policy Iteration Solution](https://www.youtube.com/watch?v=R7qeIylIdSE)

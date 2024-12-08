@@ -51,7 +51,7 @@ class MazeGame(gym.Env):
         self.state = self.start_state
         return self.state 
       
-    def _render_rgb_array(self):
+    def _render_rgb_array(self, P):
         # Create an RGB image of the maze
         cell_size = 50  # Size of each cell in pixels
         img_size = (self.n_cols * cell_size, self.n_rows * cell_size)
@@ -61,16 +61,54 @@ class MazeGame(gym.Env):
         # Draw walls
         for r in range(self.n_rows):
             for c in range(self.n_cols):
+                
+                top_left = (c * cell_size, r * cell_size)
+                bottom_right = ((c + 1) * cell_size, (r + 1) * cell_size)
                 if self.maze[r, c] == 1:  # Wall
-                    top_left = (c * cell_size, r * cell_size)
-                    bottom_right = ((c + 1) * cell_size, (r + 1) * cell_size)
                     draw.rectangle([top_left, bottom_right], fill="black")
+                elif (r,c) == self.goal_state: # Goal
+                    draw.rectangle([top_left, bottom_right], fill="red")
+                else:
+                    # Draw Arrows
+                    action = P[r, c]
+                    center = (c * cell_size + cell_size // 2, r * cell_size + cell_size // 2)
+                    arrow_length = cell_size // 2
+
+                    if action == 0:  # Up
+                        draw.line([center, (center[0], center[1] - arrow_length)], fill="green", width=3)
+                        draw.polygon([
+                            (center[0] - 5, center[1] - arrow_length + 10),
+                            (center[0] + 5, center[1] - arrow_length + 10),
+                            (center[0], center[1] - arrow_length)
+                        ], fill="green")
+                    elif action == 3:  # Right
+                        draw.line([center, (center[0] + arrow_length, center[1])], fill="green", width=3)
+                        draw.polygon([
+                            (center[0] + arrow_length - 10, center[1] - 5),
+                            (center[0] + arrow_length - 10, center[1] + 5),
+                            (center[0] + arrow_length, center[1])
+                        ], fill="green")
+                    elif action == 1:  # Down
+                        draw.line([center, (center[0], center[1] + arrow_length)], fill="green", width=3)
+                        draw.polygon([
+                            (center[0] - 5, center[1] + arrow_length - 10),
+                            (center[0] + 5, center[1] + arrow_length - 10),
+                            (center[0], center[1] + arrow_length)
+                        ], fill="green")
+                    elif action == 2:  # Left
+                        draw.line([center, (center[0] - arrow_length, center[1])], fill="green", width=3)
+                        draw.polygon([
+                            (center[0] - arrow_length + 10, center[1] - 5),
+                            (center[0] - arrow_length + 10, center[1] + 5),
+                            (center[0] - arrow_length, center[1])
+                        ], fill="green")
         
         # Draw agent
         agent_top_left = (self.state[1] * cell_size, self.state[0] * cell_size)
         agent_bottom_right = ((self.state[1] + 1) * cell_size, 
                               (self.state[0] + 1) * cell_size)
         draw.rectangle([agent_top_left, agent_bottom_right], fill="blue")
+        
         
         # Convert to NumPy array
         return np.array(img)

@@ -137,7 +137,7 @@ class ValueIteration:
         
         # frames of policy run to create video later
         # initialize with initial state frame 
-        frames = [self.env._render_rgb_array()]
+        frames = [self.env._render_rgb_array(self.P)]
         
         # reset all environment states 
         state = self.env.reset()
@@ -157,7 +157,7 @@ class ValueIteration:
                 break
             
             # add current state as frame 
-            frames.append(self.env._render_rgb_array())
+            frames.append(self.env._render_rgb_array(self.P))
             if done:
                 print(f"Reached the goal in {steps} steps.")
                 break
