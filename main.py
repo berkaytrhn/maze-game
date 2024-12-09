@@ -12,7 +12,7 @@ def main():
         [1, 0, 1, 0, 1, 0, 0, 0, 0],
         [1, 1, 1, 1, 1, 1, 1, 1, 0]
     ])
-    
+    """
     rewards = np.array([
         [1,    1,   1,   1,   1,   1,   1,   1,      1],
         [1,  -10,  -9,  -8,   1,  -8,   1,  -4,     -3],
@@ -20,12 +20,15 @@ def main():
         [1,  -12,   1,  -8,   1,  -6,  -5,  -2,     -1],
         [1,    1,   1,   1,   1,   1,   1,   1,    0]
     ])
-
+    """
+    goal = (maze.shape[0]-1, maze.shape[1]-1)
+    rewards = -1*np.ones_like(maze)
+    rewards[goal] = 100
     game = MazeGame(
         maze, 
         rewards,
-        initial_state=(2,1),
-        goal_state=(maze.shape[0]-1, maze.shape[1]-1)
+        initial_state=(maze.shape[0]-1,1),
+        goal_state=goal
     )
     
     print("Maze")
